@@ -11,9 +11,22 @@ function f_tab(p_start date, p_end date) return t_tab
   r_val t_tab := t_tab(); 
 begin
  for i in (
-   select to_date('01.01.2001','dd.mm.yyyy') as t_start, to_date('01.02.2001','dd.mm.yyyy') as t_end from dual
-   union all 
-   select to_date('21.01.2001','dd.mm.yyyy'), to_date('24.02.2001','dd.mm.yyyy') from dual
+  select distinct 
+  case
+    when bd = p_start then bd
+    when to_number(to_char(bd,'mm')) > to_number(to_char(p_start,'mm')) then to_date('01.'||to_char(bd,'mm.yyyy'),'dd.mm.yyyy')
+    else p_start
+  end t_start, 
+  case
+    when to_number(to_char(bd,'mm')) < to_number(to_char(p_end,'mm')) then last_day(bd)
+    when bd = p_end then bd
+    else p_end
+  end t_end
+      from (
+        select p_start+level-1 bd 
+        from dual connect by level <= p_end 
+        - p_start
+      ) where bd between p_start and p_end
     )
  loop
    r_val.f_start := i.t_start;
