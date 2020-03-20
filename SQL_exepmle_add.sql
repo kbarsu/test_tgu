@@ -73,3 +73,34 @@ end;
 
 -- вызов в предложении SELECT 
 select * from table(f_tab_1(to_date('15.02.2020','dd.mm.yyyy'),to_date('28.06.2020','dd.mm.yyyy')));
+
+
+----------------------------------
+-- табличная функция корректировка
+----------------------------------
+create or replace noneditionable function f_tab_2 (p_start date, p_end date)
+return t_tab pipelined is
+begin
+ for i in (
+  -- запрос для получения списка дат в указанном периоде
+  select distinct 
+         min(bd) over(partition by to_char(bd,'yyyymm')) t_start, 
+         max(bd) over(partition by to_char(bd,'yyyymm')) t_end
+  from (
+      select p_start + level - 1 bd
+      from dual connect by level <= p_end - p_start + 1
+      ) 
+  order by 1
+ )
+ loop
+    -- запонняем табличный тип 
+    pipe row(t_rec(i.t_start,i.t_end));
+  end loop;
+  return;
+end;
+/
+
+-- вызов в предложении SELECT 
+select * from table(f_tab_2(to_date('01.01.2020','dd.mm.yyyy'),to_date('01.01.2022','dd.mm.yyyy')))
+
+
