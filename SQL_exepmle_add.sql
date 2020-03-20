@@ -26,7 +26,7 @@ begin
         select p_start+level-1 bd 
         from dual connect by level <= p_end 
         - p_start
-      ) where bd between p_start and p_end
+      ) where bd between p_start and p_end order by 1
     )
  loop
    r_val.f_start := i.t_start;
